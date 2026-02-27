@@ -127,7 +127,6 @@ struct MainGameView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
         .overlay {
             if viewModel.showLevelUpPopup {
                 QuestPopupView(
@@ -136,6 +135,11 @@ struct MainGameView: View {
                 ) {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.showLevelUpPopup = false
+                        
+                        // Auto-advance logic
+                        if viewModel.currentLevel < viewModel.quests.count {
+                            viewModel.loadQuest(viewModel.currentLevel + 1)
+                        }
                     }
                 }
                 .transition(.scale.combined(with: .opacity))
@@ -148,15 +152,11 @@ struct MainGameView: View {
         }
         .onAppear {
             if viewModel.coins.isEmpty {
-                viewModel.addCoin(probability: 0.5)
+                viewModel.addCoin(probability: 1.0) // Start deterministic — user must apply H Gate
             }
             selectedCoinID = viewModel.coins.first?.id
         }
     }
-
-    // ═══════════════════════════════════════════════════════════════
-    // MARK: - Sub-views
-    // ═══════════════════════════════════════════════════════════════
 
     // ── Header ──
     private var headerView: some View {
@@ -176,7 +176,7 @@ struct MainGameView: View {
             Button {
                 showTheory = true
             } label: {
-                Image(systemName: "info.circle.fill")
+                Image(systemName: "book.fill")
                     .font(.system(size: 22))
                     .foregroundStyle(
                         LinearGradient(
@@ -188,6 +188,7 @@ struct MainGameView: View {
                     .shadow(color: .cyan.opacity(0.5), radius: 6)
             }
             .padding(.trailing, 8)
+            .tutorialHighlight(id: "theoryButton", viewModel: viewModel)
 
             HStack(spacing: 6) {
                 Image(systemName: "bolt.fill")
@@ -243,6 +244,7 @@ struct MainGameView: View {
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: coinCount)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: areEntangled)
+        .tutorialHighlight(id: "coinStage", viewModel: viewModel)
     }
 
     // ── Single tappable coin ──
@@ -251,6 +253,7 @@ struct MainGameView: View {
             isMeasured: coin.isMeasured,
             result: coin.finalResult,
             isEntangled: coin.entangledPartnerID != nil,
+            isSuperposed: coin.isSuperposed,
             coinSize: coinDisplaySize
         )
         .overlay(
@@ -311,6 +314,7 @@ struct MainGameView: View {
                         viewModel.measure(coinID: id)
                     }
                 }
+                .tutorialHighlight(id: "measureButton", viewModel: viewModel)
 
                 // ENTANGLE — active only when exactly 2 unmeasured coins
                 NeonButton(
@@ -331,6 +335,7 @@ struct MainGameView: View {
                         viewModel.entangle(coin1ID: c[0].id, coin2ID: c[1].id)
                     }
                 }
+                .tutorialHighlight(id: "entangleButton", viewModel: viewModel)
                 .opacity(canEntangle || !hasTwoCoins ? 1.0 : 0.5)
                 .allowsHitTesting(canEntangle || !hasTwoCoins)
             }
@@ -360,14 +365,15 @@ struct MainGameView: View {
                                     .stroke(Color.white.opacity(0.12), lineWidth: 1)
                             )
                     )
+                    .tutorialHighlight(id: "hGate", viewModel: viewModel)
                 }
 
                 // Reset
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.resetCoins()
-                        // Re-add one coin
-                        let newID = viewModel.addCoin(probability: 0.5)
+                        // Re-add one coin (deterministic start)
+                        let newID = viewModel.addCoin(probability: 1.0)
                         selectedCoinID = newID
                     }
                 } label: {

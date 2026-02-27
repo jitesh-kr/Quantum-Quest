@@ -9,6 +9,7 @@ import SwiftUI
 // ═══════════════════════════════════════════════════════════════════
 
 struct TheorySheetView: View {
+    @EnvironmentObject var viewModel: QuantumViewModel
     let coins: [QuantumCoin]
     @Environment(\.dismiss) private var dismiss
 
@@ -21,6 +22,42 @@ struct TheorySheetView: View {
     }
     private var hasEntangledCoins: Bool {
         coins.contains(where: { $0.entangledPartnerID != nil })
+    }
+
+    private var currentQuestFocusView: some View {
+        let quest = viewModel.quests[viewModel.currentLevel - 1]
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("CURRENT MISSION FOCUS")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundColor(.purple)
+                    .tracking(2)
+                
+                Spacer()
+                
+                Text("STEP \(viewModel.currentLevel)")
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            
+            Text(quest.title.uppercased())
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+            
+            Text(quest.theoryText)
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundColor(.white.opacity(0.9))
+                .lineSpacing(4)
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.purple.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     var body: some View {
@@ -42,6 +79,9 @@ struct TheorySheetView: View {
 
                     // ── Header ──
                     headerView
+
+                    // ── Current Level Focus ──
+                    currentQuestFocusView
 
                     // ── Theory Cards ──
                     // Always show Superposition — it's the foundation
@@ -76,9 +116,9 @@ struct TheorySheetView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
+                .liquidGlass(cornerRadius: 30, accentColor: .cyan)
             }
         }
-        .preferredColorScheme(.dark)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
@@ -206,15 +246,10 @@ struct TheorySheetView: View {
     }
 
     private var currentHint: String {
-        if hasEntangledCoins && !hasMeasuredCoins {
-            return "Try measuring one of the entangled coins to see spooky action!"
+        let quest = viewModel.quests[viewModel.currentLevel - 1]
+        if !quest.hint.isEmpty {
+            return quest.hint
         }
-        if hasMeasuredCoins && !hasEntangledCoins {
-            return "Add a second coin and entangle them to explore quantum linking."
-        }
-        if !hasMeasuredCoins {
-            return "Apply the H Gate to enter superposition, then MEASURE to collapse!"
-        }
-        return "Reset the lab and try different experiments!"
+        return quest.objective
     }
 }

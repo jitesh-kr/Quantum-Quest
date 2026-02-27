@@ -19,7 +19,7 @@ struct ContentView: View {
 
     var body: some View {
         if hasCompletedOnboarding {
-            MainGameView()
+            HomeTabView()
                 .environmentObject(viewModel)
         } else {
             OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)

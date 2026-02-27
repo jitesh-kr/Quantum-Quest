@@ -26,10 +26,16 @@ struct QuantumCoin: Identifiable {
     let id: UUID
 
     /// The probability of measuring **Heads** (range 0.0 … 1.0).
-    ///
-    /// Conceptually this represents |α|² in the quantum state
-    /// |ψ⟩ = α|Heads⟩ + β|Tails⟩, where |α|² + |β|² = 1.
     var probability: Double
+
+    /// Whether the coin is currently in a quantum superposition.
+    /// This allows the H-gate to toggle back to the original state.
+    var isSuperposed: Bool = false
+
+    /// Whether the coin has ever had an H-Gate applied to it.
+    /// Used to distinguish a "returned-to-deterministic" coin (Level 4)
+    /// from a freshly created one.
+    var hasBeenToggled: Bool = false
 
     /// Whether the coin has been observed / measured.
     /// Once `true`, the coin's state is fixed and can no longer
@@ -50,12 +56,16 @@ struct QuantumCoin: Identifiable {
     init(
         id: UUID = UUID(),
         probability: Double = 1.0,   // starts as deterministic Heads
+        isSuperposed: Bool = false,
+        hasBeenToggled: Bool = false,
         isMeasured: Bool = false,
         finalResult: Bool? = nil,
         entangledPartnerID: UUID? = nil
     ) {
         self.id = id
         self.probability = probability
+        self.isSuperposed = isSuperposed
+        self.hasBeenToggled = hasBeenToggled
         self.isMeasured = isMeasured
         self.finalResult = finalResult
         self.entangledPartnerID = entangledPartnerID

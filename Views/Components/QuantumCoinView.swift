@@ -11,6 +11,7 @@ struct QuantumCoinView: View {
     let isMeasured: Bool
     let result: Bool?
     let isEntangled: Bool
+    let isSuperposed: Bool
     var coinSize: CGFloat = 120
 
     /// Derived sizes relative to coinSize
@@ -68,8 +69,8 @@ struct QuantumCoinView: View {
                     radius: breathe && !isMeasured ? coinSize * 0.25 : coinSize * 0.12
                 )
                 .shadow(color: .purple.opacity(isMeasured ? 0.1 : 0.3), radius: coinSize * 0.33)
-                .scaleEffect(isMeasured ? 1.0 : (breathe ? 1.08 : 0.94))
-                .rotationEffect(.degrees(isMeasured ? 0 : (breathe ? 2 : -2)))
+                .scaleEffect(isMeasured || !isSuperposed ? 1.0 : (breathe ? 1.08 : 0.94))
+                .rotationEffect(.degrees(isMeasured || !isSuperposed ? 0 : (breathe ? 2 : -2)))
 
             // ── Entangled indicator ring ──
             if isEntangled && !isMeasured {
@@ -111,6 +112,10 @@ struct QuantumCoinView: View {
     private var coinSymbol: String {
         if isMeasured {
             return result == true ? "h.circle.fill" : "t.circle.fill"
+        }
+        if !isSuperposed {
+            // Deterministic state but not yet "locked" by measurement
+            return "h.circle.fill" // Defaults to Heads in our simplified logic
         }
         return "circle.hexagongrid.fill"
     }

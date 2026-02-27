@@ -204,7 +204,6 @@ struct OnboardingView: View {
             }
             .animation(.easeInOut(duration: 0.4), value: currentPage)
         }
-        .preferredColorScheme(.dark)
     }
 }
 
